@@ -5,6 +5,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.*;
+
 public class ProfileTest {
     // 각 테스트들은 순서대로 실행되지 않는다.
     // 매 메서드마다 새로운 인스턴스 실행함.
@@ -27,7 +29,7 @@ public class ProfileTest {
 
         boolean matches = profile.matches(criteria);
 
-        Assert.assertFalse(matches);
+        assertFalse(matches);
     }
 
     @Test
@@ -37,6 +39,6 @@ public class ProfileTest {
 
         boolean matches = profile.matches(criteria);
 
-        Assert.assertTrue(matches);
+        assertTrue(matches);
     }
 }
