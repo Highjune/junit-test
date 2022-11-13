@@ -1,6 +1,8 @@
-package com.example.junittest.iloveyouboss;
+package com.example.junittest.etc;
 
 import static org.hamcrest.CoreMatchers.*;
+
+import com.example.junittest.iloveyouboss_04.ScoreCollection;
 import org.junit.Assert;
 import org.junit.Test;
 
