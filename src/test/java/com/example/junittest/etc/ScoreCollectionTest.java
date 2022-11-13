@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.*;
 
 import com.example.junittest.iloveyouboss_04.ScoreCollection;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ScoreCollectionTest  {
@@ -20,5 +21,16 @@ public class ScoreCollectionTest  {
 
         // 단언
         Assert.assertThat(actualResult, equalTo(6));
+    }
+
+    @Test
+    public void test1() {
+        Assert.assertTrue(true);
+    }
+
+    @Test
+    @Ignore
+    public void test2() {
+        Assert.assertTrue(false);
     }
 }
