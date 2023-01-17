@@ -117,3 +117,102 @@
     - Mokito(모키토) 
         - 테스트의 기대 사항 설정은 실제 테스트보다 먼저 해야함.
         - `when(...).thenReturn(...)` 패턴은 모키토를 사용하여 목을 설정하는 여러 방법 중 하나.
+
+
+## 테스트 리팩토링
+- try/catch 블록제거해서 가독성 높이자
+    - Junit이 테스트에서 던지는 예외들을 잡아 준다. 예외가 발생한 테스트는 오류로 표시되고 출력 창에 stack trace가 보임. 명시적인 try/catch 블럭은 부가 가치가 없다.
+- 불필요한 유효성(ex. null 체크) 체크는 하지 않아도 된다.
+    - 어차피 오류가 날 부분이라면 Junit이 이것을 잡아 테스트를 오류로 처리해준다.
+- 추상화
+    - 비어 있음(emptiness) 개념을 추가. 단언을 바꾸면 크기비교를 이해하는 불필요하는 정신적 노력 줄일 수 있다.
+    ```java
+    assertThat(list.getMatches().size(), equal(0));
+    ```
+    ```java
+    assertThat(list.getMatches().isEmpty());
+    ```
+- 부적절한 정보
+    - 프로그래밍에서 상수로 선언하지 않은 숫자 리터럴을 '메직 넘버'라고 하는데, 코드에는 되도록 사용하면 안된다.
+    - 아래에서는 1이 의미도 없을 뿐더러, 알아보기 위해서 Search 클래스를 또 찾아봐야 하는 번거로움이 있다.
+    ```java
+    Search search = new Search(stream, "practical joke", 1);
+    ```
+    - 상수로 변경(의미를 분명하게 전달 가능)
+    ```java
+    ...
+    private static final String ANY_TITLE = 1;
+
+    Search search = new Search(stream, "practical joke", ANY_TITLE);    
+    ```
+
+- 부푼 생성
+    - Stream 객체의 생성자에 InputStream객체를 넘겨야 하는 상황.
+    - 정신 산란한 세부 사항을 숨겨서 훨씬 쉽게 변환
+    - 기존
+    ```java
+    String pageContent = "asdjflakdsjflaksjdflaksjdflkasjdflkasjdflkjsadlfkjasdl;fkjas;ldkjf;laskdjfl;askdjf;asjkf;sad"
+    bytep[] bytes = pageContent.getbytes();
+    ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
+    ```
+    - 수정 후
+    ```java
+    ...
+    private static final String ANY_TITLE = 1;
+
+
+    @Test
+    pubilc void testSearch() throws IOException {
+        
+        InputStream stream = 
+            streamOn("asdjflakdsjflaksjdflaksjdflkasjdflkasjdflkjsadlfkjasdl;fkjas;ldkjf;laskdjfl;askdjf;asjkf;sad");
+        
+        Search search = new Search(stream, "practical joke", ANY_TITLE);
+    }
+
+    private InputStream streamOn(String pageContent) {
+        return new ByteArrayInputStream(pageContent.getByteS());
+    }
+
+    ```
+- 하나의 단언
+    - 하나의 테스트 안에 여러 단언이 있다는 것은 그 안에 여러 테스트가 있다는 것을 의미한다.
+    - 불필요한 주석 제거하기. 단일 목적의 테스트는 주석이 없어도 더 나은 테스트 이름으로 대신할 수 있다.
+
+- 테스트와 무관한 세부 사항들
+    - @Before와 @After로 옮기자
+    - 예를 들어 테스트를 실행할 때는 로그를 끄지만 그렇게 하는 코드는 테스트의 정수를 이해하는데 방해가 된다.
+    - 또는 스트림을 사용한 후에는 닫아야 하지만 그것 또한 테스트에는 군더더기가 될 수도 있다.
+    ```java
+    private InputStream stream;
+
+    @Before
+    public void turnOffLogging() {
+        Search.LOGGER.setLevel(Level.OFF);
+    }
+
+    @After
+    public void closeResources() throws IOException {
+        stream.close();
+    }
+    ```
+- 테스트에서 어느 부분들이 준비(Arrange), 실행(Act), 단언(Assert) 부분인지 아는 것은 매우 중요
+    - 빈 줄로 구분하자
+    ```java
+    ~~~~~~~~(준비 Arrage 하는 코드~~~~~~)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    (한 줄 공백)
+    ~~~~~~~~(실행 Act 하는 코드)~~~~~~~~
+    (한 줄 공백)
+    ~~~~~~~
+    ```
+
+- 암시적 의미
+    - `왜 그러한 결과를 기대하는가?` 가 매우 중요
+    - 좀 더 나은 테스트 데이터를 골라서 명시적으로 바꿔보기
+    ```java
+    stream = streamOn("any text"); // 어떠한 텍스트라도 들어올 수도 있다는 의미
+    Search search = new Search(stream, "text that doesn't match", A_TITLE);
+    ```
+    - 위에서 "text that doesn't match" 를 통해 테스트 의도를 더 명확하게 표현할 수 있다.
